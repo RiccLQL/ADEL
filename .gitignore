@@ -1,0 +1,6 @@
+all_pictures/
+classified/
+re-classified/
+api/node_modules/
+venv/Lib/
+models/
