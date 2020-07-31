@@ -1,12 +1,15 @@
 const express = require('express');
-import * as tf from '@tensorflow/tfjs';
-import { add } from '@tensorflow/tfjs';
+const tf = require('@tensorflow/tfjs');
+//const multer = require('multer');
+const Canvas = require('canvas');
 const cors = require('cors');
 const bodyparser = require('body-parser');
+const Busboy = require('busboy');
+const path = require('path');
+const fs = require('fs');
 
-const upload = multer({ dest: './temp'});
 const app = express();
-const model = await tf.loadLayersModel('./beep/model.json');
+const model = tf.loadLayersModel('../model/model.json');
 
 //any middleware
 app.use(cors());
@@ -27,14 +30,56 @@ app.use(
     })
 )
 
-app.post('/process/img', upload.single('temp'), (req, res) => {
-    const img = tf.FromPixels(req.file);
+
+//const upload = multer({ dest: './temp'});
+
+//busboy
+
+app.post('/process/img', (req, res) => {
+
+    var busboy = new Busboy({ headers: req.headers });
+    busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+
+      var saveTo = path.join(__dirname, 'temp/' + filename);
+      file.pipe(fs.createWriteStream(saveTo));
+    });
+
+    busboy.on('finish', function() {
+        fs.readFile(`./temp/DJI_0641.JPG`, (err, data) => {
+            if (err) throw err;
+            const img = new Canvas.Image();
+            img.src = data;
+            console.log(img);
+
+            var canvas = Canvas.createCanvas(img.width, img.height);
+            var ctx = canvas.getContext('2d');
+
+            const imgdata = ctx.getImageData(0, 0, img.width, img.height);
+
+            const tfimg = tf.browser.fromPixels(imgdata);
+            console.log(tfimg);
+            const number = model.predict(tfimg);
+            console.log(number);
+
+            res.send(number);
+        })
+
+        res.writeHead(200, { 'Connection': 'close' });
+        res.end("That's all folks!");
+    });
+
+    return req.pipe(busboy);  
+
+    /*console.log(req.body)
+    const rawimg = new Image;
+    rawimg.src = "./temp/uploads/"
+    const img = tf.browser.fromPixels(ImageData());
     console.log(img);
     const number = model.predict(img);
     console.log(number);
 
-    res.send(number);
+    res.send(number);*/
 })
 
 const port = 8000;
-app.listen(port, () => {console.log(`Listening at http://localhost:${port}`)});
+app.listen(port, 'localhost', () => {console.log(`Listening at http://localhost:${port}`)});
