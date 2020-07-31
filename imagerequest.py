@@ -29,7 +29,7 @@ class ImageRequest:
         #headers = {"Content-Type":"multipart/form-data"}
         url = "http://localhost:8000/process/img"
         file = {'media': open('C:/Ricky/Drone/Drone_AI_Vision/Drone_AI_Vision/temp/DJI_0641.JPG', 'rb')}
-        print(file)
+        print(file['media'].name)
         number = requests.post(url, files=file)
         print(number.status_code)
         print(number.text)
