@@ -4,3 +4,4 @@ re-classified/
 api/node_modules/
 venv/Lib/
 models/
+api/model/
